@@ -49,7 +49,7 @@ that were not made explicit.
 
 from __future__ import annotations
 
-from typing import Dict
+from typing import Dict, Optional
 from typing import List
 
 import gdb
@@ -71,7 +71,7 @@ CALLOC_NAME = "calloc"
 REALLOC_NAME = "realloc"
 FREE_NAME = "free"
 
-last_issue: str | None = None
+last_issue: Optional[str] = None
 
 # Useful to track possbile collision errors.
 PRINT_DEBUG = False
@@ -109,7 +109,7 @@ def is_enabled() -> bool:
     return any(installed)
 
 
-def resolve_address(name: str) -> int | None:
+def resolve_address(name: str) -> Optional[int]:
     """
     Checks whether a given symbol is available and part of libc, and returns its
     address.
@@ -250,7 +250,7 @@ class Tracker:
         """
         Returns colored string of the provided pointer/address
         """
-        if colored_ptr := self.colorized_heap_ptrs.get(ptr)
+        if colored_ptr := self.colorized_heap_ptrs.get(ptr):
             return colored_ptr
 
         idx = len(self.colorized_heap_ptrs) % len(PTRS_COLORS)

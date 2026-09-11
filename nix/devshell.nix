@@ -70,6 +70,9 @@ in
 
           # from qemu-tests.sh
           binutils
+
+          # for uv package manager
+          uv
           ;
       }
       ++ [
