@@ -49,6 +49,7 @@ class LLDBTestHost(TestHost):
         env["TEST_BINARIES_ROOT"] = str(self._binaries_root)
         env["TEST_PDB_ON_FAIL"] = "1" if pdb else "0"
         env["PWNDBG_IN_TEST"] = "1"
+        env["TERM"] = "dumb"
         if test_name is not None:
             env["TEST_NAME"] = test_name
 

@@ -72,6 +72,7 @@ class GDBTestHost(TestHost):
         env["NO_COLOR"] = "1"
         env["GDB_BIN_PATH"] = str(self._gdb_path)
         env["TEST_BINARIES_ROOT"] = str(self._binaries_root)
+        env["TERM"] = "dumb"
         if interactive:
             env["USE_PDB"] = "1"
 
@@ -96,6 +97,7 @@ class GDBTestHost(TestHost):
 
         env = os.environ.copy()
         env["TEST_BINARIES_ROOT"] = str(self._binaries_root)
+        env["TERM"] = "dumb"
         env["TESTS_PATH"] = str(self._pytest_root)
 
         result = self._run_gdb("tests.host.gdb.pytests_collect", env=env)
