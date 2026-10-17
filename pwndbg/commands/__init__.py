@@ -91,9 +91,9 @@ class Command(gdb.Command):
 
     def __init__(
         self,
-        function: Callable[..., str | None],
+        function: Callable[..., Optional[str]],
         prefix: bool = False,
-        command_name: str | None = None,
+        command_name: Optional[str] = None,
         shell: bool = False,
         is_alias: bool = False,
         aliases: List[str] = [],
@@ -185,7 +185,7 @@ class Command(gdb.Command):
 
         return True
 
-    def __call__(self, *args: Any, **kwargs: Any) -> str | None:
+    def __call__(self, *args: Any, **kwargs: Any) -> Optional[str]:
         try:
             return self.function(*args, **kwargs)
         except TypeError as te:
@@ -197,8 +197,8 @@ class Command(gdb.Command):
 
 
 def fix(
-    arg: gdb.Value | str, sloppy: bool = False, quiet: bool = True, reraise: bool = False
-) -> str | gdb.Value | None:
+    arg: Union[gdb.Value, str], sloppy: bool = False, quiet: bool = True, reraise: bool = False
+) -> Union[str, gdb.Value, None]:
     """Fix a single command-line argument coming from the GDB CLI.
 
     Arguments:
@@ -383,7 +383,7 @@ def _is_statically_linked() -> bool:
     return "No shared libraries loaded at this time." in out
 
 
-def _try2run_heap_command(function: Callable[..., str | None], a: Any, kw: Any) -> str | None:
+def _try2run_heap_command(function: Callable[..., Optional[str]], a: Any, kw: Any) -> Optional[str]:
     e = lambda s: print(message.error(s))
     w = lambda s: print(message.warn(s))
     # Note: We will still raise the error for developers when exception-* is set to "on"
@@ -534,9 +534,9 @@ class ArgparsedCommand:
 
     def __init__(
         self,
-        parser_or_desc: argparse.ArgumentParser | str,
+        parser_or_desc: Union[argparse.ArgumentParser, str],
         aliases: List[str] = [],
-        command_name: str | None = None,
+        command_name: Optional[str] = None,
         category: CommandCategory = CommandCategory.MISC,
     ) -> None:
         """
@@ -582,7 +582,7 @@ _mask = 0xFFFFFFFFFFFFFFFF
 _mask_val_type = gdb.Value(_mask).type
 
 
-def sloppy_gdb_parse(s: str) -> int | str:
+def sloppy_gdb_parse(s: str) -> Union[int, str]:
     """
     This function should be used as ``argparse.ArgumentParser`` .add_argument method's `type` helper.
 

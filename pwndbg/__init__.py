@@ -25,7 +25,7 @@ try:
     import pwndbg.disasm.sparc
     import pwndbg.disasm.x86
     import pwndbg.heap
-except ModuleNotFoundError:
+except (ModuleNotFoundError, TypeError):
     pass
 
 import pwndbg.exception

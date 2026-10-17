@@ -47,7 +47,6 @@ that were not made explicit.
 
 """
 
-import itertools
 import gdb
 from sortedcontainers import SortedDict
 
@@ -65,6 +64,7 @@ last_issue = None
 # Useful to track possbile collision errors.
 PRINT_DEBUG = False
 
+
 def is_enabled() -> bool:
     """
     Whether the heap tracker in enabled.
@@ -79,19 +79,21 @@ def is_enabled() -> bool:
 
     return any(installed)
 
+
 def _basename(val):
     """
     Returns the last component of a path.
     """
-    val.split("/")[-1]
+    return val.split("/")[-1]
 
-def resolve_address(name: str) -> int | None:
+
+def resolve_address(name: str):
     """
     Checks whether a given symbol is available and part of libc, and returns its
     address.
     """
     # If that fails, try to query for it by using the less precise pwndbg API.
-    address = pwndbg.gdblib.symbol.address(name) 
+    address = pwndbg.gdblib.symbol.address(name)
     if not address:
         # Nothing that we can do here.
         return None
@@ -109,10 +111,15 @@ def resolve_address(name: str) -> int | None:
     info = gdb.execute(f"info symbol {address:#x}", to_string=True, from_tty=False)
     info = info.split(" of ")[-1].split("/")[-1]
     if not info or LIBC_NAME not in info:
-        print(message.warn(f"Instance of symbol {name} that was found does not seem to belong to an instance of libc whose name is in the form {LIBC_NAME}. Refusing to use."))
+        print(
+            message.warn(
+                f"Instance of symbol {name} that was found does not seem to belong to an instance of libc whose name is in the form {LIBC_NAME}. Refusing to use."
+            )
+        )
         return None
-    
+
     return address
+
 
 class FreeChunkWatchpoint(gdb.Breakpoint):
     def __init__(self, chunk, tracker):
@@ -140,7 +147,9 @@ class FreeChunkWatchpoint(gdb.Breakpoint):
             # We explicitly allow this operation.
             return False
 
-        print(f"[!] Possible use-after-free in {self.chunk.size}-byte chunk at address {self.chunk.address:#x}")
+        print(
+            f"[!] Possible use-after-free in {self.chunk.size}-byte chunk at address {self.chunk.address:#x}"
+        )
 
         global stop_on_error
         if stop_on_error:
@@ -170,7 +179,7 @@ class Tracker:
     def __init__(self):
         self.free_chunks = SortedDict()
         self.alloc_chunks = SortedDict()
-        self.free_whatchpoints = dict()
+        self.free_watchpoints = dict()
         self.memory_management_calls = dict()
 
     def is_performing_memory_management(self):
@@ -497,8 +506,8 @@ class FreeExitBreakpoint(gdb.FinishBreakpoint):
         if not self.tracker.free(self.ptr):
             # This is a chunk we'd never seen before.
             self.tracker.exit_memory_management()
-            
-            print(f"[!] free() with previously unknown pointer {self.freed_ptr:#x}")
+
+            print(f"[!] free() with previously unknown pointer {self.ptr:#x}")
             global stop_on_error
             return stop_on_error
 
@@ -535,7 +544,8 @@ free_enter = None
 # Whether the inferior should be stopped when an error is detected.
 stop_on_error = True
 
-def install(disable_hardware_whatchpoints=True):
+
+def install(disable_hardware_watchpoints=True):
     global malloc_enter
     global calloc_enter
     global realloc_enter
@@ -566,7 +576,7 @@ def install(disable_hardware_whatchpoints=True):
     # consistency and so that we don't have to chase silent failures.
     #
     # [1]: https://sourceware.org/gdb/onlinedocs/gdb/Set-Watchpoints.html
-    if disable_hardware_whatchpoints:
+    if disable_hardware_watchpoints:
         gdb.execute("set can-use-hw-watchpoints 0")
         print("Hardware watchpoints have been disabled. Please do not turn them back on until")
         print("heap tracking is disabled, as it may lead to unexpected silent errors.")
