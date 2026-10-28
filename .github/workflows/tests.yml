@@ -22,6 +22,22 @@ jobs:
         path: ~/.cache/pip
         key: ${{ matrix.os }}-cache-pip
 
+    - name: Wait for pypi_wayback or fallback to PyPI
+      run: |
+        MAX_RETRIES=5
+        RETRY=0
+        until curl -sf http://localhost:8629/2024-01-03/pip/ > /dev/null; do
+          RETRY=$((RETRY + 1))
+          if [ $RETRY -ge $MAX_RETRIES ]; then
+            echo "pypi_wayback not available after $MAX_RETRIES retries, falling back to real PyPI"
+            echo "PIP_INDEX_URL=https://pypi.org/simple" >> $GITHUB_ENV
+            echo "UV_INDEX_URL=https://pypi.org/simple" >> $GITHUB_ENV
+            break
+          fi
+          echo "Waiting for pypi_wayback... attempt $RETRY/$MAX_RETRIES"
+          sleep 2
+        done
+
     - name: Install dependencies
       run: |
         ./setup.sh
@@ -64,6 +80,22 @@ jobs:
       with:
         path: ~/.cache/pip
         key: ${{ matrix.os }}-cache-pip
+
+    - name: Wait for pypi_wayback or fallback to PyPI
+      run: |
+        MAX_RETRIES=5
+        RETRY=0
+        until curl -sf http://localhost:8629/2024-01-03/pip/ > /dev/null; do
+          RETRY=$((RETRY + 1))
+          if [ $RETRY -ge $MAX_RETRIES ]; then
+            echo "pypi_wayback not available after $MAX_RETRIES retries, falling back to real PyPI"
+            echo "PIP_INDEX_URL=https://pypi.org/simple" >> $GITHUB_ENV
+            echo "UV_INDEX_URL=https://pypi.org/simple" >> $GITHUB_ENV
+            break
+          fi
+          echo "Waiting for pypi_wayback... attempt $RETRY/$MAX_RETRIES"
+          sleep 2
+        done
 
     - name: Install dependencies
       run: |
