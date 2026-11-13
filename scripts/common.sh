@@ -27,8 +27,24 @@ else
         echo "Warning: Falling back to 'uv' found in PATH." >&2
         UV="$(command -v uv)"
     else
-        echo "Error: 'uv' binary not found." >&2
-        UV="${PWNDBG_VENV_PATH}/bin/uv"
+        echo "Warning: 'uv' binary not found. Attempting to install it..." >&2
+        if command -v pip > /dev/null 2>&1; then
+            pip install uv > /dev/null 2>&1 && {
+                echo "Installed uv via pip." >&2
+                if command -v uv > /dev/null 2>&1; then
+                    UV="$(command -v uv)"
+                else
+                    echo "Error: Failed to locate uv after installation." >&2
+                    UV="${PWNDBG_VENV_PATH}/bin/uv"
+                fi
+            } || {
+                echo "Error: Failed to install uv via pip." >&2
+                UV="${PWNDBG_VENV_PATH}/bin/uv"
+            }
+        else
+            echo "Error: 'uv' binary not found and pip is not available." >&2
+            UV="${PWNDBG_VENV_PATH}/bin/uv"
+        fi
     fi
     UV_RUN="${UV} run"
     UV_RUN_TEST="${UV_RUN} --group dev --group tests --all-extras"

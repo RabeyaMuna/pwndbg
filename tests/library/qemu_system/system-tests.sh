@@ -146,8 +146,13 @@ run_gdb() {
         echo "$GDB --nx ${gdb_load_pwndbg[@]} -ex \"set exception-debugger on\" -ex \"file ${TESTING_KERNEL_IMAGES_DIR}/vmlinux-${kernel_type}-${kernel_version}-${arch}\" -ex \"target remote :${GDB_PORT}\""
         read -p "Press enter to continue"
     else
-        (cd $PWNDBG_ABS_PATH && $UV_RUN_TEST $GDB --silent --nx "${gdb_load_pwndbg[@]}" \
-            -ex "set exception-verbose on" "$@" -ex "quit" 2> /dev/null)
+        if [ $RUN_IN_NIX -eq 1 ]; then
+            (cd $PWNDBG_ABS_PATH && $GDB --silent --nx "${gdb_load_pwndbg[@]}" \
+                -ex "set exception-verbose on" "$@" -ex "quit" 2> /dev/null)
+        else
+            (cd $PWNDBG_ABS_PATH && $UV_RUN_TEST $GDB --silent --nx "${gdb_load_pwndbg[@]}" \
+                -ex "set exception-verbose on" "$@" -ex "quit" 2> /dev/null)
+        fi
     fi
     return $?
 }
