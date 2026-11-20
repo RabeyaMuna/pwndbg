@@ -1,20 +1,18 @@
 name: Unit tests
-on:
-  push:
-    branches:
-      - dev
-    paths:
-      - '!mkdocs.yml'
-      - '!docs/**'      
-  pull_request:
+on: push
 
 jobs:
   tests:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, ubuntu-20.04]
+        os: [ubuntu-22.04]
     runs-on: ${{ matrix.os }}
+    services:
+      pypi_wayback:
+        image: ghcr.io/waleko/pypi-wayback
+        ports:
+        - 8629:8080
     timeout-minutes: 20
     steps:
     - uses: actions/checkout@v3
@@ -23,6 +21,22 @@ jobs:
       with:
         path: ~/.cache/pip
         key: ${{ matrix.os }}-cache-pip
+
+    - name: Wait for pypi_wayback or fallback to PyPI
+      run: |
+        MAX_RETRIES=5
+        RETRY=0
+        until curl -sf http://localhost:8629/2024-01-03/pip/ > /dev/null; do
+          RETRY=$((RETRY + 1))
+          if [ $RETRY -ge $MAX_RETRIES ]; then
+            echo "pypi_wayback not available after $MAX_RETRIES retries, falling back to real PyPI"
+            echo "PIP_INDEX_URL=https://pypi.org/simple" >> $GITHUB_ENV
+            echo "UV_INDEX_URL=https://pypi.org/simple" >> $GITHUB_ENV
+            break
+          fi
+          echo "Waiting for pypi_wayback... attempt $RETRY/$MAX_RETRIES"
+          sleep 2
+        done
 
     - name: Install dependencies
       run: |
@@ -51,7 +65,7 @@ jobs:
         ./.venv/bin/coverage combine
         ./.venv/bin/coverage xml
 
-    - name: "Upload coverage to Codecov"
+    - name: Upload coverage to Codecov
       if: matrix.os == 'ubuntu-22.04'
       uses: codecov/codecov-action@v3
 
@@ -66,6 +80,22 @@ jobs:
       with:
         path: ~/.cache/pip
         key: ${{ matrix.os }}-cache-pip
+
+    - name: Wait for pypi_wayback or fallback to PyPI
+      run: |
+        MAX_RETRIES=5
+        RETRY=0
+        until curl -sf http://localhost:8629/2024-01-03/pip/ > /dev/null; do
+          RETRY=$((RETRY + 1))
+          if [ $RETRY -ge $MAX_RETRIES ]; then
+            echo "pypi_wayback not available after $MAX_RETRIES retries, falling back to real PyPI"
+            echo "PIP_INDEX_URL=https://pypi.org/simple" >> $GITHUB_ENV
+            echo "UV_INDEX_URL=https://pypi.org/simple" >> $GITHUB_ENV
+            break
+          fi
+          echo "Waiting for pypi_wayback... attempt $RETRY/$MAX_RETRIES"
+          sleep 2
+        done
 
     - name: Install dependencies
       run: |
@@ -103,3 +133,7 @@ jobs:
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
+
+env:
+  PIP_INDEX_URL: http://localhost:8629/2024-01-03
+  UV_INDEX_URL: http://localhost:8629/2024-01-03
